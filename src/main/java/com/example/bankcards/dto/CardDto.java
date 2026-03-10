@@ -1,5 +1,6 @@
 package com.example.bankcards.dto;
 
+import jakarta.validation.constraints.Future;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.PositiveOrZero;
@@ -17,6 +18,7 @@ public class CardDto {
     private String cardNumber;
 
     @NotNull(message = "Validity period is required")
+    @Future(message = "Validity period must be in the future")
     private Date validityPeriod;
 
     @NotNull(message = "Status is required")

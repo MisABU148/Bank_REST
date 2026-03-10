@@ -1,6 +1,5 @@
 package com.example.bankcards.controller;
 
-import com.example.bankcards.dto.CardDto;
 import com.example.bankcards.dto.UserDto;
 import com.example.bankcards.service.UserService;
 import jakarta.validation.Valid;
@@ -40,7 +39,7 @@ public class UserController {
     }
 
     @PutMapping("/update/{id}")
-    public ResponseEntity<Void> updateUser(@PathVariable Long id, @RequestBody UserDto card) {
+    public ResponseEntity<Void> updateUser(@PathVariable Long id, @Valid @RequestBody UserDto card) {
         log.info("Update user with id: {}", id);
         userService.updateUser(id, card);
         return ResponseEntity.ok().build();

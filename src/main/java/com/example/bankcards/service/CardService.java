@@ -77,7 +77,10 @@ public class CardService {
         existingCard.setCardNumber(cardDto.getCardNumber());
         existingCard.setValidityPeriod(cardDto.getValidityPeriod());
         existingCard.setBalance(cardDto.getBalance());
-        existingCard.setStatus(Status.valueOf(cardDto.getStatus()));
+
+        if (existingCard.getStatus() != null) {
+            existingCard.setStatus(Status.fromString(cardDto.getStatus()));
+        }
 
         if (cardDto.getUserId() != null) {
             User user = userRepository.findById(cardDto.getUserId())

@@ -43,7 +43,7 @@ public class CardController {
     }
 
     @PutMapping("/update/{id}")
-    public ResponseEntity<Void> updateCard(@PathVariable Long id, @RequestBody CardDto card) {
+    public ResponseEntity<Void> updateCard(@PathVariable Long id, @Valid @RequestBody CardDto card) {
         log.info("Update card with id: {}", id);
         cardService.updateCard(id, card);
         return ResponseEntity.ok().build();

@@ -2,6 +2,7 @@ package com.example.bankcards.dto;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Past;
 import lombok.Data;
 
 import java.util.Date;
@@ -18,8 +19,10 @@ public class UserDto {
     private String lastName;
 
     @NotNull(message = "Age is required")
+    @Past(message = "Age must be in the past")
     private Date age;
 
+    @NotNull(message = "Role is required")
     private String role;
 
 }

@@ -1,7 +1,6 @@
 package com.example.bankcards.entity;
 
 import jakarta.persistence.*;
-import jakarta.validation.constraints.*;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 
@@ -13,17 +12,12 @@ import java.util.Date;
 @RequiredArgsConstructor
 public class Card {
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    @NotNull(message = "Card number is required")
-    @Pattern(regexp = "^\\d{16}$", message = "Card number must be exactly 16 digits")
     private String cardNumber;
-    @NotNull(message = "Validity period is required")
     private Date validityPeriod;
     @Enumerated(EnumType.STRING)
     private Status status;
-    @NotNull(message = "Balance is required")
-    @PositiveOrZero(message = "Balance cannot be negative")
     private Long balance;
     @ManyToOne
     @JoinColumn(name = "user_id")

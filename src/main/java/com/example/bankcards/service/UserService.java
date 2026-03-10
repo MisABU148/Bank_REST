@@ -39,18 +39,21 @@ public class UserService {
     }
 
     public void createUser(UserDto userDto) {
+        log.info("Start creating user");
         User user = dtoToEntity(userDto);
         User savedUser = userRepository.save(user);
         entityToDto(savedUser);
     }
 
     public UserDto getUserById(Long id) {
+        log.info("Get user by id: {}", id);
         return userRepository.findById(id)
                 .map(this::entityToDto)
                 .orElseThrow(() -> new RuntimeException("User not found with id " + id));
     }
 
     public List<UserDto> getAllUsers() {
+        log.info("Get all users");
         return userRepository.findAll().stream()
                 .map(this::entityToDto)
                 .collect(Collectors.toList());
