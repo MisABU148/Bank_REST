@@ -6,6 +6,7 @@ import com.example.bankcards.entity.User;
 import com.example.bankcards.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -52,9 +53,9 @@ public class UserService {
                 .orElseThrow(() -> new RuntimeException("User not found with id " + id));
     }
 
-    public List<UserDto> getAllUsers() {
+    public List<UserDto> getAllUsers(int page, int pageSize) {
         log.info("Get all users");
-        return userRepository.findAll().stream()
+        return userRepository.findAll(PageRequest.of(page, pageSize)).stream()
                 .map(this::entityToDto)
                 .collect(Collectors.toList());
     }

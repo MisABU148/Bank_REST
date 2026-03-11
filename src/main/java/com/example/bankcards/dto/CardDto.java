@@ -22,6 +22,10 @@ public class CardDto {
     private Date validityPeriod;
 
     @NotNull(message = "Status is required")
+    @Pattern(
+            regexp = "active|blocked|expired",
+            message = "Role must be active, blocked or expired"
+    )
     private String status;
 
     @NotNull(message = "Balance is required")

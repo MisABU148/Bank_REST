@@ -3,6 +3,7 @@ package com.example.bankcards.dto;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Past;
+import jakarta.validation.constraints.Pattern;
 import lombok.Data;
 
 import java.util.Date;
@@ -23,6 +24,10 @@ public class UserDto {
     private Date age;
 
     @NotNull(message = "Role is required")
+    @Pattern(
+            regexp = "admin|user",
+            message = "Role must be admin or user"
+    )
     private String role;
 
 }

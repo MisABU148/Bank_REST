@@ -6,13 +6,15 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
 @RestController
-@RequestMapping("/user")
+@RequestMapping("/admin/user-control")
 @RequiredArgsConstructor
+@Validated
 @Slf4j
 public class UserController {
     private final UserService userService;
@@ -31,10 +33,11 @@ public class UserController {
         return ResponseEntity.ok(User);
     }
 
-    @GetMapping("/all")
-    public ResponseEntity<List<UserDto>> getAllUsers() {
+    @GetMapping("/all/{page}/{pageSize}")
+    public ResponseEntity<List<UserDto>> getAllUsers(@PathVariable int page,
+            @PathVariable int pageSize) {
         log.info("Get all users");
-        List<UserDto> Users = userService.getAllUsers();
+        List<UserDto> Users = userService.getAllUsers(page, pageSize);
         return ResponseEntity.ok(Users);
     }
 

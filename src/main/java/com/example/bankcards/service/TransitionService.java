@@ -17,6 +17,7 @@ import org.springframework.stereotype.Service;
 public class TransitionService {
     private final CardRepository cardRepository;
 
+    @Transactional
     public void transferAmount(TransferDto transfer) {
         log.info("Identify card FROM");
         Card cardFrom = cardRepository.findByCardNumber(transfer.getCardFrom())
