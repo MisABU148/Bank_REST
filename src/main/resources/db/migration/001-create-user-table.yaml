@@ -16,13 +16,13 @@ databaseChangeLog:
                     nullable: false
 
               - column:
-                  name: first_name
+                  name: user_name
                   type: VARCHAR(255)
                   constraints:
                     nullable: false
 
               - column:
-                  name: last_name
+                  name: password
                   type: VARCHAR(255)
                   constraints:
                     nullable: false

@@ -18,9 +18,9 @@ public class User {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     @NotBlank(message = "Firstname is required")
-    private String firstName;
-    @NotBlank(message = "Lastname is required")
-    private String lastName;
+    private String userName;
+    @NotBlank(message = "Password is required")
+    private String password;
     @NotNull(message = "Age is required")
     private Date age;
     @Enumerated(EnumType.STRING)

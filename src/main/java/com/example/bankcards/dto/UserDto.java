@@ -14,10 +14,10 @@ public class UserDto {
     private Long id;
 
     @NotBlank(message = "Firstname is required")
-    private String firstName;
+    private String userName;
 
-    @NotBlank(message = "Lastname is required")
-    private String lastName;
+    @NotNull(message = "Password is required")
+    private String password;
 
     @NotNull(message = "Age is required")
     @Past(message = "Age must be in the past")

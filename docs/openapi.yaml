@@ -1,1 +1,382 @@
-# Здесь будет OpenAPI описание всех доступных эндпоинтов и моделей данных.
+openapi: 3.0.3
+
+info:
+  title: Bank Cards REST API
+  description: API для управления пользователями и банковскими картами
+  version: 1.0.0
+
+servers:
+  - url: http://localhost:8080
+    description: Local server
+
+paths:
+
+  /auth/sign-in:
+    post:
+      summary: Аутентификация пользователя
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserCredentialsDto'
+      responses:
+        '200':
+          description: JWT токен
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JwtAuthenticationDto'
+
+  /auth/refresh:
+    post:
+      summary: Обновление JWT токена
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RefreshTokenDto'
+      responses:
+        '200':
+          description: Новый JWT токен
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JwtAuthenticationDto'
+
+  /admin/user-control/create:
+    post:
+      summary: Создать пользователя
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserDto'
+      responses:
+        '200':
+          description: Пользователь создан
+
+  /admin/user-control/{id}:
+    get:
+      summary: Получить пользователя по ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Пользователь найден
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserDto'
+
+  /admin/user-control/all/{page}/{pageSize}:
+    get:
+      summary: Получить список пользователей
+      parameters:
+        - name: page
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: pageSize
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Список пользователей
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/UserDto'
+
+  /admin/user-control/update/{id}:
+    put:
+      summary: Обновить пользователя
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserDto'
+      responses:
+        '200':
+          description: Пользователь обновлен
+
+  /admin/user-control/delete/{id}:
+    delete:
+      summary: Удалить пользователя
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Пользователь удален
+
+  /admin/card-control/create:
+    post:
+      summary: Создать карту
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CardDto'
+      responses:
+        '200':
+          description: Карта создана
+
+  /admin/card-control/{id}:
+    get:
+      summary: Получить карту по ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Карта найдена
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CardDto'
+
+  /admin/card-control/all/{page}/{pageSize}:
+    get:
+      summary: Получить все карты
+      parameters:
+        - name: page
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: pageSize
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Список карт
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CardDto'
+
+  /admin/card-control/update/{id}:
+    put:
+      summary: Обновить карту
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CardDto'
+      responses:
+        '200':
+          description: Карта обновлена
+
+  /admin/card-control/delete/{id}:
+    delete:
+      summary: Удалить карту
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Карта удалена
+
+  /user/card-control/block/{id}:
+    post:
+      summary: Заблокировать карту
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BlockRequest'
+      responses:
+        '200':
+          description: Карта заблокирована
+
+  /user/card-control/balance/{userId}:
+    post:
+      summary: Получить баланс карты
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BalanceRequest'
+      responses:
+        '200':
+          description: Баланс карты
+          content:
+            application/json:
+              schema:
+                type: integer
+
+  /user/card-control/{userId}/{page}/{pageSize}:
+    get:
+      summary: Получить карты пользователя
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: page
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: pageSize
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Список карт пользователя
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CardDto'
+
+  /user/card-control/transition:
+    post:
+      summary: Перевод между картами пользователя
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TransferDto'
+      responses:
+        '200':
+          description: Перевод выполнен
+
+components:
+
+  schemas:
+
+    UserCredentialsDto:
+      type: object
+      properties:
+        username:
+          type: string
+        password:
+          type: string
+
+    JwtAuthenticationDto:
+      type: object
+      properties:
+        accessToken:
+          type: string
+        refreshToken:
+          type: string
+
+    RefreshTokenDto:
+      type: object
+      properties:
+        refreshToken:
+          type: string
+
+    UserDto:
+      type: object
+      properties:
+        id:
+          type: integer
+        firstName:
+          type: string
+        lastName:
+          type: string
+        age:
+          type: string
+          format: date
+        role:
+          type: string
+
+    CardDto:
+      type: object
+      properties:
+        id:
+          type: integer
+        cardNumber:
+          type: string
+        validityPeriod:
+          type: string
+          format: date
+        status:
+          type: string
+        balance:
+          type: integer
+        userId:
+          type: integer
+
+    BlockRequest:
+      type: object
+      properties:
+        cardNumber:
+          type: string
+
+    BalanceRequest:
+      type: object
+      properties:
+        cardNumber:
+          type: string
+
+    TransferDto:
+      type: object
+      properties:
+        fromCardNumber:
+          type: string
+        toCardNumber:
+          type: string
+        amount:
+          type: integer
