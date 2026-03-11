@@ -155,7 +155,18 @@ Docker поднимает:
 * базу данных PostgreSQL
 
 Запуск проекта:
+- Создайте файл .env в корне проекта:
 
+```.env
+# PostgreSQL
+POSTGRES_DB=bankcards
+POSTGRES_USER=bankuser
+POSTGRES_PASSWORD=bankpass
+
+# Spring приложение
+SPRING_DATASOURCE_PASSWORD=bankpass
+```
+- Сборка и запуск
 ```bash
 docker-compose up --build
 ```
