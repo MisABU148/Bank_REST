@@ -2,9 +2,9 @@ package com.example.bankcards.dto;
 
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
-import lombok.Getter;
+import lombok.Data;
 
-@Getter
+@Data
 public class BlockRequest {
 
     @NotNull(message = "Card number is required")
