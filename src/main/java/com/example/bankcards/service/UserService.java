@@ -11,6 +11,7 @@ import com.example.bankcards.security.jwt.JwtService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -64,6 +65,7 @@ public class UserService {
                 .orElseThrow(() -> new Exception(String.format("User not found with name " + userName)));
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     public void createUser(UserDto userDto) {
         log.info("Start creating user");
         User user = dtoToEntity(userDto);
@@ -71,6 +73,7 @@ public class UserService {
         entityToDto(savedUser);
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     public UserDto getUserById(Long id) {
         log.info("Get user by id: {}", id);
         return userRepository.findById(id)
@@ -78,6 +81,7 @@ public class UserService {
                 .orElseThrow(() -> new RuntimeException("User not found with id " + id));
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     public List<UserDto> getAllUsers(int page, int pageSize) {
         log.info("Get all users");
         return userRepository.findAll(PageRequest.of(page, pageSize)).stream()
@@ -85,11 +89,12 @@ public class UserService {
                 .collect(Collectors.toList());
     }
 
-    public void updateUser(Long id, UserDto userDto) {
-        log.info("Updating user with id {}", id);
+    @PreAuthorize("hasRole('ADMIN')")
+    public void updateUser(UserDto userDto) {
+        log.info("Updating user");
 
-        User user = userRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("User not found with id " + id));
+        User user = userRepository.findById(userDto.getId())
+                .orElseThrow(() -> new RuntimeException("User not found"));
 
         user.setUserName(userDto.getUserName());
         user.setPassword(passwordEncoder.encode(userDto.getPassword()));
@@ -102,6 +107,7 @@ public class UserService {
         userRepository.save(user);
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     public void deleteUser(Long id) {
         log.info("Deleting user with id {}", id);
 
@@ -115,6 +121,20 @@ public class UserService {
 
     public JwtAuthenticationDto signIn(UserCredentialsDto userCredentialsDto) throws AuthenticationException {
         User user = findByCredentials(userCredentialsDto);
+        return jwtService.generateAuthToken(user.getUserName());
+    }
+
+    public JwtAuthenticationDto signUp(UserDto userDto) {
+
+        User user = new User();
+
+        user.setUserName(userDto.getUserName());
+        user.setPassword(passwordEncoder.encode(userDto.getPassword()));
+        user.setAge(userDto.getAge());
+        user.setRole(Role.fromString(userDto.getRole()));
+
+        userRepository.save(user);
+
         return jwtService.generateAuthToken(user.getUserName());
     }
 

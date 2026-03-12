@@ -28,9 +28,8 @@ public class UserController {
 
     @GetMapping("/{id}")
     public ResponseEntity<UserDto> getUser(@PathVariable Long id) {
-        log.info("Get user by id: {}", id);
-        UserDto User = userService.getUserById(id);
-        return ResponseEntity.ok(User);
+        log.info("Get user by id");
+        return ResponseEntity.ok(userService.getUserById(id));
     }
 
     @GetMapping("/all/{page}/{pageSize}")
@@ -41,16 +40,16 @@ public class UserController {
         return ResponseEntity.ok(Users);
     }
 
-    @PutMapping("/update/{id}")
-    public ResponseEntity<Void> updateUser(@PathVariable Long id, @Valid @RequestBody UserDto card) {
-        log.info("Update user with id: {}", id);
-        userService.updateUser(id, card);
+    @PutMapping("/update")
+    public ResponseEntity<Void> updateUser(@Valid @RequestBody UserDto card) {
+        log.info("Update user");
+        userService.updateUser(card);
         return ResponseEntity.ok().build();
     }
 
     @DeleteMapping("/delete/{id}")
     public ResponseEntity<Void> deleteUser(@PathVariable Long id) {
-        log.info("Delete user with id: {}", id);
+        log.info("Delete user with id");
         userService.deleteUser(id);
         return ResponseEntity.ok().build();
     }

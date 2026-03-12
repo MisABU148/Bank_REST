@@ -9,6 +9,7 @@ import com.example.bankcards.repository.CardRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -17,6 +18,7 @@ import org.springframework.stereotype.Service;
 public class TransitionService {
     private final CardRepository cardRepository;
 
+    @PreAuthorize("hasRole('USER')")
     @Transactional
     public void transferAmount(TransferDto transfer) {
         log.info("Identify card FROM");

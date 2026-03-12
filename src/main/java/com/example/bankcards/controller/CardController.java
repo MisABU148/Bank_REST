@@ -29,24 +29,25 @@ public class CardController {
         return ResponseEntity.ok().build();
     }
 
-    @GetMapping("/admin/card-control/{id}")
-    public ResponseEntity<CardDto> getCardByCardId(@PathVariable Long id) {
-        log.info("Get card by id: {}", id);
-        CardDto card = cardService.getCardById(id);
+    @GetMapping("/admin/card-control/{cardId}")
+    public ResponseEntity<CardDto> getCardByCardId(@PathVariable Long cardId)  {
+        log.info("Get card by username");
+        CardDto card = cardService.getCardById(cardId);
         return ResponseEntity.ok(card);
     }
 
     @GetMapping("/admin/card-control/all/{page}/{pageSize}")
-    public ResponseEntity<List<CardDto>> getAllCards(@PathVariable int page, @PathVariable int pageSize) {
+    public ResponseEntity<List<CardDto>> getAllCards(@PathVariable int page,
+                                                     @PathVariable int pageSize) {
         log.info("Get all cards");
         List<CardDto> cards = cardService.getAllCards(page, pageSize);
         return ResponseEntity.ok(cards);
     }
 
-    @PutMapping("/admin/card-control/update/{id}")
-    public ResponseEntity<Void> updateCard(@PathVariable Long id, @Valid @RequestBody CardDto card) {
-        log.info("Update card with id: {}", id);
-        cardService.updateCard(id, card);
+    @PutMapping("/admin/card-control/update/")
+    public ResponseEntity<Void> updateCard(@Valid @RequestBody CardDto card) {
+        log.info("Update card");
+        cardService.updateCard(card);
         return ResponseEntity.ok().build();
     }
 
@@ -57,26 +58,23 @@ public class CardController {
         return ResponseEntity.ok().build();
     }
 
-    @PostMapping("/user/card-control/block/{id}")
-    public ResponseEntity<Void> blockCard(@PathVariable Long id,
-                                          @Valid @RequestBody BlockRequest request) {
+    @PostMapping("/user/card-control/block")
+    public ResponseEntity<Void> blockCard(@Valid @RequestBody BlockRequest request) {
         log.info("Start blocking card");
-        cardService.blockCard(id, request);
+        cardService.blockCard(request);
         return ResponseEntity.ok().build();
     }
 
-    @PostMapping("/user/card-control/balance/{userId}")
-    public ResponseEntity<Long> getBalanceCard(@PathVariable Long userId,
-                                          @Valid @RequestBody BalanceRequest request) {
+    @PostMapping("/user/card-control/balance")
+    public ResponseEntity<Long> getBalanceCard(@Valid @RequestBody BalanceRequest request) {
         log.info("Get balance for card");
-        return ResponseEntity.ok(cardService.getBalance(userId, request));
+        return ResponseEntity.ok(cardService.getBalance(request));
     }
 
-    @GetMapping("/user/card-control/{userId}/{page}/{pageSize}")
-    public List<CardDto> getCardByUserId(@PathVariable Long userId,
-                                         @PathVariable int page,
-                                         @PathVariable int pageSize) {
+    @GetMapping("/user/card-control/{page}/{pageSize}")
+    public List<CardDto> getCardByUserId(@PathVariable int page,
+                                         @PathVariable int pageSize)  {
         log.info("Get all card for user");
-        return cardService.getCardsByUserId(userId, page, pageSize);
+        return cardService.getCardsByUserName(page, pageSize);
     }
 }

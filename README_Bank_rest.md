@@ -168,6 +168,7 @@ SPRING_DATASOURCE_PASSWORD=bankpass
 ```
 - Сборка и запуск
 ```bash
+mvn clean package
 docker-compose up --build
 ```
 

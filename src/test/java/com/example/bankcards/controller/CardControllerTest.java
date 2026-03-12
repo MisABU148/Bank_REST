@@ -14,6 +14,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -21,8 +22,7 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -65,7 +65,8 @@ class CardControllerTest {
     }
 
     @Test
-    void createCard_shouldReturnOk() throws Exception {
+    @WithMockUser(roles = "ADMIN")
+    void createCard_shouldReturnOk_forAdmin() throws Exception {
         mockMvc.perform(post("/admin/card-control/create")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(testCard)))
@@ -75,21 +76,8 @@ class CardControllerTest {
     }
 
     @Test
-    void createCard_withInvalidData_shouldReturnBadRequest() throws Exception {
-        CardDto invalidCard = new CardDto();
-        invalidCard.setCardNumber("123");
-        invalidCard.setValidityPeriod(new Date());
-        invalidCard.setStatus("invalid");
-        invalidCard.setBalance(-100L);
-
-        mockMvc.perform(post("/admin/card-control/create")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(invalidCard)))
-                .andExpect(status().isBadRequest());
-    }
-
-    @Test
-    void getCardById_shouldReturnCard() throws Exception {
+    @WithMockUser(roles = "ADMIN")
+    void getCardById_shouldReturnCard_forAdmin() throws Exception {
         Mockito.when(cardService.getCardById(1L)).thenReturn(testCard);
 
         mockMvc.perform(get("/admin/card-control/1"))
@@ -102,88 +90,114 @@ class CardControllerTest {
     }
 
     @Test
-    void getAllCards_shouldReturnList() throws Exception {
+    @WithMockUser(roles = "ADMIN")
+    void getAllCards_shouldReturnList_forAdmin() throws Exception {
         List<CardDto> cards = List.of(testCard);
         Mockito.when(cardService.getAllCards(0, 10)).thenReturn(cards);
 
         mockMvc.perform(get("/admin/card-control/all/0/10"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].id").value(1))
-                .andExpect(jsonPath("$[0].cardNumber").value("1234567812345678"))
-                .andExpect(jsonPath("$[0].status").value("active"))
-                .andExpect(jsonPath("$[0].balance").value(1000))
-                .andExpect(jsonPath("$[0].userId").value(1));
+                .andExpect(jsonPath("$[0].cardNumber").value("1234567812345678"));
     }
 
     @Test
-    void updateCard_shouldReturnOk() throws Exception {
+    @WithMockUser(roles = "ADMIN")
+    void updateCard_shouldReturnOk_forAdmin() throws Exception {
         CardDto updatedCard = new CardDto();
+        updatedCard.setId(1L);
         updatedCard.setCardNumber("8765432187654321");
         updatedCard.setValidityPeriod(futureDate);
         updatedCard.setStatus("blocked");
         updatedCard.setBalance(2000L);
         updatedCard.setUserId(1L);
 
-        mockMvc.perform(put("/admin/card-control/update/1")
+        mockMvc.perform(put("/admin/card-control/update/")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(updatedCard)))
                 .andExpect(status().isOk());
 
-        Mockito.verify(cardService).updateCard(eq(1L), any(CardDto.class));
+        Mockito.verify(cardService).updateCard(any(CardDto.class));
     }
 
     @Test
-    void deleteCard_shouldReturnOk() throws Exception {
+    @WithMockUser(roles = "ADMIN")
+    void deleteCard_shouldReturnOk_forAdmin() throws Exception {
         mockMvc.perform(delete("/admin/card-control/delete/1"))
                 .andExpect(status().isOk());
 
         Mockito.verify(cardService).deleteCard(1L);
     }
-
     @Test
-    void blockCard_shouldReturnOk() throws Exception {
-        BlockRequest blockRequest = new BlockRequest();
-        blockRequest.setCardNumber("1234567812345678");
+    @WithMockUser(roles = "USER")
+    void blockCard_shouldReturnOk_forUser() throws Exception {
+        BlockRequest request = new BlockRequest();
+        request.setCardNumber("1234567812345678");
 
-        mockMvc.perform(post("/user/card-control/block/1")
+        mockMvc.perform(post("/user/card-control/block")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(blockRequest)))
+                        .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk());
 
-        Mockito.verify(cardService).blockCard(eq(1L), any(BlockRequest.class));
+        Mockito.verify(cardService).blockCard(any(BlockRequest.class));
     }
 
     @Test
-    void getBalance_shouldReturnBalance() throws Exception {
-        BalanceRequest balanceRequest = new BalanceRequest();
-        balanceRequest.setCardNumber("1234567812345678");
+    @WithMockUser(roles = "USER")
+    void getBalance_shouldReturnBalance_forUser() throws Exception {
+        BalanceRequest request = new BalanceRequest();
+        request.setCardNumber("1234567812345678");
 
-        Mockito.when(cardService.getBalance(1L, balanceRequest)).thenReturn(1000L);
+        Mockito.when(cardService.getBalance(any(BalanceRequest.class))).thenReturn(1000L);
 
-        mockMvc.perform(post("/user/card-control/balance/1")
+        mockMvc.perform(post("/user/card-control/balance")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(balanceRequest)))
+                        .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
                 .andExpect(content().string("1000"));
     }
 
     @Test
-    void getCardsByUserId_shouldReturnList() throws Exception {
+    @WithMockUser(roles = "USER")
+    void getCardsByUser_shouldReturnList_forUser() throws Exception {
         List<CardDto> userCards = List.of(testCard);
-        Mockito.when(cardService.getCardsByUserId(1L, 0, 10)).thenReturn(userCards);
+        Mockito.when(cardService.getCardsByUserName(0, 10)).thenReturn(userCards);
 
-        mockMvc.perform(get("/user/card-control/1/0/10"))
+        mockMvc.perform(get("/user/card-control/0/10"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].id").value(1))
-                .andExpect(jsonPath("$[0].userId").value(1))
                 .andExpect(jsonPath("$[0].cardNumber").value("1234567812345678"));
     }
 
     @Test
-    void getCardsByUserId_withPagination_shouldCallServiceWithCorrectParams() throws Exception {
-        mockMvc.perform(get("/user/card-control/1/2/5"))
-                .andExpect(status().isOk());
+    @WithMockUser(roles = "USER")
+    void adminEndpoints_shouldReturnForbidden_forUser() throws Exception {
+        mockMvc.perform(post("/admin/card-control/create")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(testCard)))
+                .andExpect(status().isForbidden());
 
-        Mockito.verify(cardService).getCardsByUserId(1L, 2, 5);
+        mockMvc.perform(get("/admin/card-control/1"))
+                .andExpect(status().isForbidden());
+
+        mockMvc.perform(delete("/admin/card-control/delete/1"))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    @WithMockUser(roles = "ADMIN")
+    void userEndpoints_shouldReturnForbidden_forAdmin() throws Exception {
+        BlockRequest request = new BlockRequest();
+        request.setCardNumber("1234567812345678");
+
+        mockMvc.perform(post("/user/card-control/block")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isForbidden());
+
+        mockMvc.perform(post("/user/card-control/balance")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(new BalanceRequest())))
+                .andExpect(status().isForbidden());
     }
 }

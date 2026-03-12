@@ -17,6 +17,9 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
 
@@ -60,12 +63,14 @@ public class CardService {
         return dto;
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     public void createCard(CardDto cardDto) {
         log.info("Save data to db");
         Card card = dtoToEntity(cardDto);
         cardRepository.save(card);
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     public CardDto getCardById(Long id) {
         log.info("Get card by id: {}", id);
         Card card = cardRepository.findById(id)
@@ -73,6 +78,7 @@ public class CardService {
         return entityToDto(card);
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     public List<CardDto> getAllCards(int page, int pageSize) {
         log.info("Get all cards");
         return cardRepository.findAll(PageRequest.of(page, pageSize)).stream()
@@ -80,10 +86,11 @@ public class CardService {
                 .collect(Collectors.toList());
     }
 
-    public void updateCard(Long id, CardDto cardDto) {
-        log.info("Update card with id: {}", id);
-        Card existingCard = cardRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Card not found with id " + id));
+    @PreAuthorize("hasRole('ADMIN')")
+    public void updateCard(CardDto cardDto) {
+        log.info("Update card with id: {}", cardDto.getId());
+        Card existingCard = cardRepository.findById(cardDto.getId())
+                .orElseThrow(() -> new RuntimeException("Card not found with id " + cardDto.getId()));
 
         existingCard.setCardNumber(cardDto.getCardNumber());
         existingCard.setValidityPeriod(cardDto.getValidityPeriod());
@@ -94,14 +101,15 @@ public class CardService {
         }
 
         if (cardDto.getUserId() != null) {
-            User user = userRepository.findById(cardDto.getUserId())
+            User newUser = userRepository.findById(cardDto.getUserId())
                     .orElseThrow(() -> new RuntimeException("User not found with id " + cardDto.getUserId()));
-            existingCard.setUser(user);
+            existingCard.setUser(newUser);
         }
 
         cardRepository.save(existingCard);
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     public void deleteCard(Long id) {
         log.info("Delete card with id: {}", id);
         Card card = cardRepository.findById(id)
@@ -109,13 +117,20 @@ public class CardService {
         cardRepository.delete(card);
     }
 
+    @PreAuthorize("hasRole('USER')")
     @Transactional
-    public void blockCard(Long id, BlockRequest request) {
+    public void blockCard(BlockRequest request) {
+        String userName = ((UserDetails) Objects.requireNonNull(Objects.requireNonNull(SecurityContextHolder
+                .getContext().getAuthentication()).getPrincipal())).getUsername();
+
+        User user = userRepository.findByUserName(userName)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
         log.info("Identify card");
         Card card = cardRepository.findByCardNumber(request.getCardNumber())
                 .orElseThrow(() -> new CardNotFoundException("Card not found"));
 
-        if (!Objects.equals(card.getUser().getId(), id)) {
+        if (!Objects.equals(card.getUser().getId(), user.getId())) {
             throw new NotSelfCardException("You can block only own card");
         }
 
@@ -127,7 +142,15 @@ public class CardService {
         card.setStatus(Status.BLOCKED);
     }
 
-    public List<CardDto> getCardsByUserId(Long id, int page, int pageSize) {
+    @PreAuthorize("hasRole('USER')")
+    public List<CardDto> getCardsByUserName(int page, int pageSize) {
+        String userName = ((UserDetails) Objects.requireNonNull(Objects.requireNonNull(SecurityContextHolder
+                .getContext().getAuthentication()).getPrincipal())).getUsername();
+
+        User user = userRepository.findByUserName(userName)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        Long id = user.getId();
         log.info("Get cards for user with id {}", id);
         Page<Card> cards = id == null
                 ? cardRepository.findAll(PageRequest.of(page, pageSize))
@@ -138,13 +161,20 @@ public class CardService {
                 .toList();
     }
 
+    @PreAuthorize("hasRole('USER')")
     @Transactional
-    public Long getBalance(Long userId, @Valid BalanceRequest request) {
+    public Long getBalance(@Valid BalanceRequest request) {
+        String userName = ((UserDetails) Objects.requireNonNull(Objects.requireNonNull(SecurityContextHolder
+                .getContext().getAuthentication()).getPrincipal())).getUsername();
+
+        User user = userRepository.findByUserName(userName)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
         log.info("See balance of car with number {}", request.getCardNumber());
         Card card = cardRepository.findByCardNumber(request.getCardNumber())
                 .orElseThrow(() -> new CardNotFoundException("Card not found"));
 
-        if (!Objects.equals(card.getUser().getId(), userId)) {
+        if (!Objects.equals(card.getUser().getId(), user.getId())) {
             throw new NotSelfCardException("You can use only own card");
         }
 
