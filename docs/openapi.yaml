@@ -1,19 +1,16 @@
 openapi: 3.0.3
-
 info:
-  title: Bank Cards REST API
-  description: API для управления пользователями и банковскими картами
+  title: Bank Cards Authentication API
   version: 1.0.0
-
-servers:
-  - url: http://localhost:8080
-    description: Local server
+  description: API для аутентификации пользователей и управления JWT-токенами
 
 paths:
-
   /auth/sign-in:
     post:
-      summary: Аутентификация пользователя
+      tags:
+        - Auth
+      summary: Вход пользователя
+      description: Принимает учетные данные пользователя и возвращает JWT токен и refresh token.
       requestBody:
         required: true
         content:
@@ -22,15 +19,44 @@ paths:
               $ref: '#/components/schemas/UserCredentialsDto'
       responses:
         '200':
-          description: JWT токен
+          description: Успешная аутентификация
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/JwtAuthenticationDto'
+        '401':
+          description: Ошибка аутентификации
+
+  /auth/sign-up:
+    post:
+      tags:
+        - Auth
+      summary: Регистрация пользователя
+      description: Создает нового пользователя и возвращает JWT токен и refresh token.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserDto'
+      responses:
+        '200':
+          description: Пользователь успешно зарегистрирован
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JwtAuthenticationDto'
+        '400':
+          description: Неверные данные пользователя
 
   /auth/refresh:
     post:
+      tags:
+        - CardController
       summary: Обновление JWT токена
+      description: Принимает refresh token и возвращает новый JWT токен.
+      security:
+        - BearerAuth: []
       requestBody:
         required: true
         content:
@@ -44,96 +70,17 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/JwtAuthenticationDto'
-
-  /admin/user-control/create:
-    post:
-      summary: Создать пользователя
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/UserDto'
-      responses:
-        '200':
-          description: Пользователь создан
-
-  /admin/user-control/{id}:
-    get:
-      summary: Получить пользователя по ID
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: integer
-      responses:
-        '200':
-          description: Пользователь найден
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/UserDto'
-
-  /admin/user-control/all/{page}/{pageSize}:
-    get:
-      summary: Получить список пользователей
-      parameters:
-        - name: page
-          in: path
-          required: true
-          schema:
-            type: integer
-        - name: pageSize
-          in: path
-          required: true
-          schema:
-            type: integer
-      responses:
-        '200':
-          description: Список пользователей
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/UserDto'
-
-  /admin/user-control/update/{id}:
-    put:
-      summary: Обновить пользователя
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: integer
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/UserDto'
-      responses:
-        '200':
-          description: Пользователь обновлен
-
-  /admin/user-control/delete/{id}:
-    delete:
-      summary: Удалить пользователя
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: integer
-      responses:
-        '200':
-          description: Пользователь удален
+        '401':
+          description: Неверный или просроченный refresh token
 
   /admin/card-control/create:
     post:
+      tags:
+        - CardController
       summary: Создать карту
+      description: Создает новую карту (только для администраторов)
+      security:
+        - BearerAuth: []
       requestBody:
         required: true
         content:
@@ -142,14 +89,21 @@ paths:
               $ref: '#/components/schemas/CardDto'
       responses:
         '200':
-          description: Карта создана
+          description: Карта успешно создана
+        '400':
+          description: Некорректные данные
 
-  /admin/card-control/{id}:
+  /admin/card-control/{cardId}:
     get:
+      tags:
+        - CardController
       summary: Получить карту по ID
+      description: Возвращает карту по ID (только для администраторов)
+      security:
+        - BearerAuth: []
       parameters:
-        - name: id
-          in: path
+        - in: path
+          name: cardId
           required: true
           schema:
             type: integer
@@ -160,18 +114,25 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/CardDto'
+        '404':
+          description: Карта не найдена
 
   /admin/card-control/all/{page}/{pageSize}:
     get:
+      tags:
+        - CardController
       summary: Получить все карты
+      description: Возвращает список всех карт с пагинацией (только для администраторов)
+      security:
+        - BearerAuth: []
       parameters:
-        - name: page
-          in: path
+        - in: path
+          name: page
           required: true
           schema:
             type: integer
-        - name: pageSize
-          in: path
+        - in: path
+          name: pageSize
           required: true
           schema:
             type: integer
@@ -185,15 +146,14 @@ paths:
                 items:
                   $ref: '#/components/schemas/CardDto'
 
-  /admin/card-control/update/{id}:
+  /admin/card-control/update/:
     put:
+      tags:
+        - CardController
       summary: Обновить карту
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: integer
+      description: Обновляет данные карты (только для администраторов)
+      security:
+        - BearerAuth: []
       requestBody:
         required: true
         content:
@@ -202,30 +162,38 @@ paths:
               $ref: '#/components/schemas/CardDto'
       responses:
         '200':
-          description: Карта обновлена
+          description: Карта успешно обновлена
+        '400':
+          description: Некорректные данные
 
   /admin/card-control/delete/{id}:
     delete:
+      tags:
+        - CardController
       summary: Удалить карту
+      description: Удаляет карту по ID (только для администраторов)
+      security:
+        - BearerAuth: []
       parameters:
-        - name: id
-          in: path
+        - in: path
+          name: id
           required: true
           schema:
             type: integer
       responses:
         '200':
-          description: Карта удалена
+          description: Карта успешно удалена
+        '404':
+          description: Карта не найдена
 
-  /user/card-control/block/{id}:
+  /user/card-control/block:
     post:
+      tags:
+        - CardController
       summary: Заблокировать карту
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: integer
+      description: Пользователь блокирует свою карту
+      security:
+        - BearerAuth: []
       requestBody:
         required: true
         content:
@@ -234,17 +202,18 @@ paths:
               $ref: '#/components/schemas/BlockRequest'
       responses:
         '200':
-          description: Карта заблокирована
+          description: Карта успешно заблокирована
+        '400':
+          description: Некорректные данные
 
-  /user/card-control/balance/{userId}:
+  /user/card-control/balance:
     post:
+      tags:
+        - CardController
       summary: Получить баланс карты
-      parameters:
-        - name: userId
-          in: path
-          required: true
-          schema:
-            type: integer
+      description: Возвращает баланс указанной карты пользователя
+      security:
+        - BearerAuth: []
       requestBody:
         required: true
         content:
@@ -259,22 +228,22 @@ paths:
               schema:
                 type: integer
 
-  /user/card-control/{userId}/{page}/{pageSize}:
+  /user/card-control/{page}/{pageSize}:
     get:
+      tags:
+        - CardController
       summary: Получить карты пользователя
+      description: Возвращает список карт пользователя с пагинацией
+      security:
+        - BearerAuth: []
       parameters:
-        - name: userId
-          in: path
+        - in: path
+          name: page
           required: true
           schema:
             type: integer
-        - name: page
-          in: path
-          required: true
-          schema:
-            type: integer
-        - name: pageSize
-          in: path
+        - in: path
+          name: pageSize
           required: true
           schema:
             type: integer
@@ -290,7 +259,10 @@ paths:
 
   /user/card-control/transition:
     post:
+      tags:
+        - TransitionController
       summary: Перевод между картами пользователя
+      description: Пользователь переводит деньги между своими картами
       requestBody:
         required: true
         content:
@@ -299,84 +271,257 @@ paths:
               $ref: '#/components/schemas/TransferDto'
       responses:
         '200':
-          description: Перевод выполнен
+          description: Перевод выполнен успешно
+        '400':
+          description: Некорректные данные перевода
+        '401':
+          description: Неавторизованный пользователь
+
+  /admin/user-control/create:
+    post:
+      tags:
+        - UserController
+      summary: Создать пользователя
+      description: Создает нового пользователя (только для админов)
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserDto'
+      responses:
+        '200':
+          description: Пользователь успешно создан
+        '400':
+          description: Некорректные данные
+        '401':
+          description: Неавторизованный пользователь
+
+  /admin/user-control/{id}:
+    get:
+      tags:
+        - UserController
+      summary: Получить пользователя по ID
+      description: Возвращает данные пользователя по ID
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Пользователь найден
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserDto'
+        '404':
+          description: Пользователь не найден
+        '401':
+          description: Неавторизованный пользователь
+
+  /admin/user-control/all/{page}/{pageSize}:
+    get:
+      tags:
+        - UserController
+      summary: Получить всех пользователей
+      description: Возвращает список всех пользователей с пагинацией
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: page
+          required: true
+          schema:
+            type: integer
+        - in: path
+          name: pageSize
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Список пользователей
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/UserDto'
+        '401':
+          description: Неавторизованный пользователь
+
+  /admin/user-control/update:
+    put:
+      tags:
+        - UserController
+      summary: Обновить пользователя
+      description: Обновляет данные пользователя (только для админов)
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserDto'
+      responses:
+        '200':
+          description: Пользователь успешно обновлен
+        '400':
+          description: Некорректные данные
+        '401':
+          description: Неавторизованный пользователь
+
+  /admin/user-control/delete/{id}:
+    delete:
+      tags:
+        - UserController
+      summary: Удалить пользователя
+      description: Удаляет пользователя по ID (только для админов)
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Пользователь успешно удален
+        '404':
+          description: Пользователь не найден
+        '401':
+          description: Неавторизованный пользователь
 
 components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
 
   schemas:
-
     UserCredentialsDto:
       type: object
+      required:
+        - username
+        - password
       properties:
         username:
           type: string
+          example: user1
         password:
           type: string
+          format: password
+          example: myPassword123
 
     JwtAuthenticationDto:
       type: object
       properties:
         accessToken:
           type: string
+          example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
         refreshToken:
           type: string
+          example: dGhpcyBpcyBhIHJlZnJlc2ggdG9rZW4=
 
     RefreshTokenDto:
       type: object
+      required:
+        - refreshToken
       properties:
         refreshToken:
           type: string
-
-    UserDto:
-      type: object
-      properties:
-        id:
-          type: integer
-        firstName:
-          type: string
-        lastName:
-          type: string
-        age:
-          type: string
-          format: date
-        role:
-          type: string
+          example: dGhpcyBpcyBhIHJlZnJlc2ggdG9rZW4=
 
     CardDto:
       type: object
+      required:
+        - cardNumber
+        - validityPeriod
+        - status
+        - balance
+        - userId
       properties:
         id:
           type: integer
+          example: 1
         cardNumber:
           type: string
+          example: "1234567812345678"
         validityPeriod:
           type: string
           format: date
+          example: "2027-03-12"
         status:
           type: string
+          example: "active"
         balance:
           type: integer
+          example: 1000
         userId:
           type: integer
+          example: 1
 
     BlockRequest:
       type: object
+      required:
+        - cardNumber
       properties:
         cardNumber:
           type: string
+          example: "1234567812345678"
 
     BalanceRequest:
       type: object
+      required:
+        - cardNumber
       properties:
         cardNumber:
           type: string
+          example: "1234567812345678"
+
+    UserDto:
+      type: object
+      required:
+        - username
+        - password
+        - role
+      properties:
+        id:
+          type: integer
+          example: 1
+        username:
+          type: string
+          example: user1
+        password:
+          type: string
+          format: password
+          example: myPassword123
+        role:
+          type: string
+          example: ADMIN
 
     TransferDto:
       type: object
+      required:
+        - fromCardNumber
+        - toCardNumber
+        - amount
       properties:
         fromCardNumber:
           type: string
+          example: "1234567812345678"
         toCardNumber:
           type: string
+          example: "8765432187654321"
         amount:
           type: integer
+          example: 500
